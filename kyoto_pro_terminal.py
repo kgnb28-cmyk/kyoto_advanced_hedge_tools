@@ -4,21 +4,30 @@ import time
 import pandas as pd
 from datetime import datetime, timedelta
 
-# --- 1. PAGE CONFIG & CSS (NO HEADERS) ---
+# --- 1. PAGE CONFIG & CSS ---
 st.set_page_config(layout="wide", page_title="Kyoto Terminal", initial_sidebar_state="expanded")
 
-# CSS to hide default headers and maximize screen real estate
+# CSS to hide headers while keeping sidebar accessible
 st.markdown("""
     <style>
-    /* Hide Streamlit Header */
-    header {visibility: hidden;}
-    /* Remove top padding */
+    /* Hide the default Streamlit header decoration */
+    header[data-testid="stHeader"] {
+        background-color: rgba(0,0,0,0); /* Transparent */
+        z-index: 1; /* Keep it below content if needed, but accessible */
+    }
+    /* Hide the top colored bar if present */
+    .stApp > header {
+        display: none;
+    }
+    
+    /* Reduce top padding to pull content up */
     .block-container {
-        padding-top: 1rem;
+        padding-top: 2rem;
         padding-bottom: 0rem;
         padding-left: 1rem;
         padding-right: 1rem;
     }
+    
     /* Compact Tiles */
     .tile-container {
         border: 1px solid #333;
@@ -39,7 +48,7 @@ st.markdown("""
     }
     .live-rate-neg { color: #ff5252; }
     
-    /* Small inputs */
+    /* Small inputs styling */
     div[data-baseweb="select"] > div {
         min-height: 30px;
         padding: 0px;
@@ -48,7 +57,6 @@ st.markdown("""
         padding: 5px;
         min-height: 30px;
     }
-    /* Adjust Number Input padding */
     div[data-testid="stNumberInput"] input {
         padding: 0px 5px;
         min-height: 30px;
@@ -56,7 +64,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 2. SESSION STATE MANAGEMENT (TABS & TILES) ---
+# --- 2. SESSION STATE MANAGEMENT ---
 
 if 'tabs' not in st.session_state:
     st.session_state['tabs'] = {'Workspace 1': []}
@@ -207,8 +215,8 @@ def render_tile(tile, key_prefix):
 
 current_tiles = st.session_state['tabs'][active_tab]
 
-# --- UPDATE 3: Max 2 Columns per Row (2xN Grid) ---
-cols_per_row = 2 
+# --- 2xN GRID LAYOUT ---
+cols_per_row = 2
 rows = [current_tiles[i:i + cols_per_row] for i in range(0, len(current_tiles), cols_per_row)]
 
 all_tile_requests = [] 
