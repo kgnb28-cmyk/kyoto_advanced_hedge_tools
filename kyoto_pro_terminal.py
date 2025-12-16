@@ -178,24 +178,22 @@ def render_tile(tile, key_prefix):
         for i, (label, def_type, def_qty) in enumerate(config):
             with cols[i]:
                 s_key = f"{key_prefix}_L{i}_s"
-                t_key = f"{key_prefix}_L{i}_t" # New Key for Type Selector
+                t_key = f"{key_prefix}_L{i}_t" 
                 
                 st.caption(f"{label} (x{def_qty})")
                 
-                # --- UPDATE 1: Adjacent CE/PE Selector ---
+                # Adjacent CE/PE Selector
                 sub_c1, sub_c2 = st.columns([2, 1.2]) 
                 with sub_c1:
                     strike = st.number_input("", value=tile['legs'].get(s_key, 21700), step=50, key=s_key, label_visibility="collapsed")
                 with sub_c2:
-                    # Default index 0 if CE, 1 if PE
                     def_idx = 0 if def_type == "CE" else 1
-                    saved_idx = tile['legs'].get(t_key, def_idx) # Retrieve saved choice or default
+                    saved_idx = tile['legs'].get(t_key, def_idx) 
                     
                     op_type = st.selectbox("", ["CE", "PE"], index=saved_idx, key=t_key, label_visibility="collapsed")
                 
-                # Save state
                 tile['legs'][s_key] = strike
-                tile['legs'][t_key] = 0 if op_type == "CE" else 1 # Save index
+                tile['legs'][t_key] = 0 if op_type == "CE" else 1 
                 
                 k = get_instrument_key(tile['index'], tile['expiry'], strike, op_type)
                 generated_keys.append({'key': k, 'qty': def_qty, 'strike': strike, 'type': op_type})
@@ -209,8 +207,8 @@ def render_tile(tile, key_prefix):
 
 current_tiles = st.session_state['tabs'][active_tab]
 
-# --- UPDATE 2: Max 3 Columns per Row ---
-cols_per_row = 3
+# --- UPDATE 3: Max 2 Columns per Row (2xN Grid) ---
+cols_per_row = 2 
 rows = [current_tiles[i:i + cols_per_row] for i in range(0, len(current_tiles), cols_per_row)]
 
 all_tile_requests = [] 
