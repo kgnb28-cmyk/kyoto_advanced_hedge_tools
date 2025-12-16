@@ -1,0 +1,6 @@
+# requirements.txt
+streamlit
+numpy
+pandas
+requests # Essential for API calls
+# upstox-python # Add the actual Upstox client library name here
