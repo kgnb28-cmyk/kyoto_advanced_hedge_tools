@@ -91,9 +91,8 @@ with st.sidebar:
     run_live = st.toggle("🔴 LIVE FEED", value=False)
 
 
-# --- 4. BACKEND LOGIC (FIXED TO USE OPTION CHAIN) ---
+# --- 4. BACKEND LOGIC (OPTION CHAIN FETCH) ---
 
-# Mapping Indices to Upstox Underlying Keys (CRITICAL FIX)
 SPOT_MAP = {
     "NIFTY": "NSE_INDEX|Nifty 50",
     "BANKNIFTY": "NSE_INDEX|Nifty Bank",
@@ -107,7 +106,6 @@ def fetch_option_chain_data(token, tiles):
     """
     if not token or not tiles: return {}
     
-    # 1. Identify Unique (Index, Expiry) pairs required
     required_fetches = set()
     for tile in tiles:
         idx_key = SPOT_MAP.get(tile['index'])
@@ -115,10 +113,7 @@ def fetch_option_chain_data(token, tiles):
         if idx_key:
             required_fetches.add((idx_key, exp_str, tile['index']))
             
-    # 2. Fetch Chains and Build Lookup Map
-    # Map Structure: lookup[(IndexName, ExpiryDate, Strike, Type)] = LTP
     lookup_map = {}
-    
     headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
     url = "https://api.upstox.com/v2/option/chain"
     
@@ -129,17 +124,15 @@ def fetch_option_chain_data(token, tiles):
             data = r.json()
             
             if data.get('status') == 'success':
-                # Parse Chain
                 for item in data['data']:
                     strike = item['strike_price']
                     ce_ltp = item['call_options']['market_data']['ltp']
                     pe_ltp = item['put_options']['market_data']['ltp']
                     
-                    # Store in Lookup
                     lookup_map[(idx_name, exp_date, float(strike), "CE")] = ce_ltp
                     lookup_map[(idx_name, exp_date, float(strike), "PE")] = pe_ltp
         except:
-            pass # Fail silently for individual chains
+            pass 
             
     return lookup_map
 
@@ -191,14 +184,11 @@ def render_tile(tile, key_prefix, data_lookup):
                 tile['legs'][t_key] = 0 if op_type == "CE" else 1 
                 
                 # --- LOOKUP LTP FROM CHAIN DATA ---
-                # Key: (Index, Expiry, Strike, Type)
                 ltp = data_lookup.get((tile['index'], exp_str, float(strike), op_type), 0.0)
-                
                 if ltp > 0: has_valid_data = True
                 
                 st.markdown(f"<div class='ltp-tag'>LTP: {ltp}</div>", unsafe_allow_html=True)
                 
-                # Calc Cost
                 total_cost += (ltp * def_qty)
 
         # Render Output
@@ -217,7 +207,9 @@ def render_tile(tile, key_prefix, data_lookup):
 # --- 6. MAIN LOOP ---
 
 current_tiles = st.session_state['tabs'][active_tab]
-cols_per_row = 2 
+
+# --- CHANGED TO 1xN GRID LAYOUT ---
+cols_per_row = 1
 rows = [current_tiles[i:i + cols_per_row] for i in range(0, len(current_tiles), cols_per_row)]
 
 if not current_tiles:
@@ -233,13 +225,10 @@ for row in rows:
 # --- 7. LIVE DATA REFRESH ---
 
 if run_live:
-    time.sleep(1) # Refresh Rate
-    
-    # Fetch Chains for ALL tiles in the current workspace
+    time.sleep(1) 
     new_data = fetch_option_chain_data(access_token, current_tiles)
-    
     if new_data:
         st.session_state['chain_cache'] = new_data
         st.rerun()
     else:
-        st.rerun() # Keep loop alive
+        st.rerun()
