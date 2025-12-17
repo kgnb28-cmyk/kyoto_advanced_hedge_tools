@@ -52,7 +52,7 @@ if 'chain_cache' not in st.session_state: st.session_state['chain_cache'] = {}
 with st.sidebar:
     st.title("🏯 Kyoto")
     st.caption("Pro Spread Terminal")
-    access_token = st.text_input("Upstox Token", type="password", key="api_token")
+    access_token = st.text_input("KC Hedge Tool Code", type="password", key="api_token")
     
     st.markdown("---")
     tabs_list = list(st.session_state['tabs'].keys())
@@ -233,4 +233,5 @@ if run_live:
     else:
 
         st.rerun()
+
 
