@@ -225,10 +225,11 @@ for row in rows:
 # --- 7. LIVE DATA REFRESH ---
 
 if run_live:
-    time.sleep(1) 
+    time.sleep(0.5) 
     new_data = fetch_option_chain_data(access_token, current_tiles)
     if new_data:
         st.session_state['chain_cache'] = new_data
         st.rerun()
     else:
+
         st.rerun()
